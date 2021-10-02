@@ -11,7 +11,7 @@ use std::env;
 /// **User command**
 /// `&steam "Get user information" <vanity_name>`
 ///     ex: `&steam "Get user information" robinwalker`
-#[poise::command(prefix_command, slash_command, track_edits)]
+#[poise::command(prefix_command, slash_command, track_edits, defer_response, broadcast_typing)]
 pub async fn steam(
     ctx: Context<'_>,
     #[description = "Steam subcommand to execute"] subcommand: Subcommand,
