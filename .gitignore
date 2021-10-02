@@ -1,0 +1,9 @@
+# build files
+/target
+
+# environment vars
+.env
+
+# editor/ide files
+.idea/
+.vscode/
