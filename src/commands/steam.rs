@@ -5,6 +5,12 @@ use poise::serenity_prelude as serenity;
 use std::env;
 
 /// Lookup information on games or users on steam
+///
+/// **Usage:**
+///
+/// **User command**
+/// `&steam "Get user information" <vanity_name>`
+///     ex: `&steam "Get user information" robinwalker`
 #[poise::command(prefix_command, slash_command, track_edits)]
 pub async fn steam(
     ctx: Context<'_>,
@@ -50,18 +56,33 @@ pub async fn steam(
 
                         embed.field("SteamID", &api_response.steam_id, false);
 
-                        let created_at = chrono
-                            ::NaiveDateTime
-                            ::from_timestamp(api_response.time_created, 0)
-                            .format("%B %e, %Y");
+                        if let Some(time_created) = api_response.time_created {
+                            let created_at = chrono
+                                ::NaiveDateTime
+                                ::from_timestamp(time_created, 0)
+                                .format("%B %e, %Y");
                         
-                        let last_logoff = chrono
-                            ::NaiveDateTime
-                            ::from_timestamp(api_response.last_logoff, 0)
-                            .format("%B %e, %Y");
+                            embed.field("Account created", created_at, true);
+                        }
+
+                        if let Some(last_logoff) = api_response.last_logoff {
+                            let last_logoff = chrono
+                                ::NaiveDateTime
+                                ::from_timestamp(last_logoff, 0)
+                                .format("%B %e, %Y");
                         
-                        embed.field("Account created", created_at, true);
-                        embed.field("Last Logoff", last_logoff, true);
+                            embed.field("Last logoff", last_logoff, true);
+                        }
+
+                        if let Some(game_extra_info) = &api_response.game_extra_info {
+                            embed.field("Currently playing", game_extra_info, false);
+                        }
+
+                        if api_response.community_visibility_state == 1 {
+                            embed.field("Account privacy", "Private", false);
+                        } else {
+                            embed.field("Account privacy", "Public", false);
+                        }
                         
                         embed
                     })
@@ -128,14 +149,17 @@ struct PlayerSummary {
     avatar: String,
 
     #[serde(rename = "lastlogoff")]
-    last_logoff: i64,
+    last_logoff: Option<i64>,
 
     #[serde(rename = "timecreated")]
-    time_created: i64,
+    time_created: Option<i64>,
 
     #[serde(rename = "communityvisibilitystate")]
     community_visibility_state: u8,
 
     #[serde(rename = "profileurl")]
-    profile_url: String
+    profile_url: String,
+
+    #[serde(rename = "gameextrainfo")]
+    game_extra_info: Option<String> 
 }
