@@ -4,7 +4,7 @@ use log::{error, info, LevelFilter};
 use simple_logger::SimpleLogger;
 use std::env;
 
-use commands::{movie::*, ping::*, steam::*};
+use commands::{movie, ping, steam};
 
 // Types used by all command functions
 type Error = Box<dyn std::error::Error + Send + Sync>;
