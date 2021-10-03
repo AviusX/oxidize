@@ -1,2 +1,2 @@
-pub mod steam; // export to be used in main.rs
-mod user; // to be internally used in steam.rs
+pub mod steam; // export the steam main command
+pub mod user; // export the user subcommand

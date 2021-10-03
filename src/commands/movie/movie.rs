@@ -49,6 +49,15 @@ pub async fn movie(
                     embed.thumbnail(&api_response.poster);
                     embed.image(&api_response.poster);
                 }
+                embed.author(|author| {
+                    if let Some(icon_url) = ctx.author().avatar_url() {
+                        author.icon_url(icon_url);
+                    } else {
+                        author.icon_url(ctx.author().default_avatar_url());
+                    }
+                    author.name(&ctx.author().name);
+                    author
+                });
 
                 let imdb_rating = format!("⭐ {}", &api_response.imdb_rating);
 
@@ -69,17 +78,17 @@ pub async fn movie(
                 ];
 
                 embed.fields(fields);
+
                 embed.footer(|footer| {
-                    let url;
-
-                    if let Some(avatar_url) = ctx.author().avatar_url() {
-                        url = avatar_url;
+                    if let Some(icon_url) = &ctx.discord().cache.current_user().avatar_url() {
+                        footer.icon_url(icon_url);
                     } else {
-                        url = ctx.author().default_avatar_url();
+                        footer.icon_url(ctx.discord().cache.current_user().default_avatar_url());
                     }
-                    footer.icon_url(url);
-                    footer.text(ctx.author().tag());
-
+                    footer.text(format!(
+                        "{} | Movie",
+                        ctx.discord().cache.current_user().name
+                    ));
                     footer
                 });
 

@@ -4,7 +4,7 @@ use log::{error, info, LevelFilter};
 use simple_logger::SimpleLogger;
 use std::env;
 
-use commands::{movie, ping, steam};
+use commands::{movie, ping, steam, user};
 
 // Types used by all command functions
 type Error = Box<dyn std::error::Error + Send + Sync>;
@@ -20,7 +20,7 @@ async fn main() {
     // Initialize the logger
     SimpleLogger::new()
         .with_level(LevelFilter::Warn)
-        .with_module_level("learn_bot", LevelFilter::Info)
+        .with_module_level("learn_bot", LevelFilter::Debug)
         .init()
         .unwrap_or_else(|err| {
             eprintln!(
@@ -59,7 +59,7 @@ async fn main() {
         .command(register(), |f| f)
         .command(ping(), |f| f)
         .command(movie(), |f| f)
-        .command(steam(), |f| f)
+        .command(steam(), |f| f.subcommand(user(), |s| s))
         .run()
         .await
     {
@@ -100,4 +100,16 @@ async fn register(ctx: Context<'_>, #[flag] global: bool) -> Result<(), Error> {
     poise::samples::register_application_commands(ctx, global).await?;
 
     Ok(())
+}
+
+#[derive(Debug, poise::SlashChoiceParameter)]
+enum Commands {
+    #[name = "help"]
+    Help,
+    #[name = "ping"]
+    Ping,
+    #[name = "movie"]
+    Movie,
+    #[name = "steam"]
+    Steam
 }
