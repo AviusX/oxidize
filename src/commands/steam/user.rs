@@ -9,7 +9,7 @@ use serde::Deserialize;
     prefix_command,
     slash_command,
     track_edits,
-    // defer_response, // currently causes buttons to stop showing up with slash commands
+    defer_response,
     broadcast_typing
 )]
 pub async fn user(

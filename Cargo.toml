@@ -1,5 +1,5 @@
 [package]
-name = "learn_bot"
+name = "oxidize"
 version = "0.1.0"
 authors = ["AviusX <aviusanima@gmail.com>"]
 edition = "2018"

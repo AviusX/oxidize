@@ -1,16 +1,21 @@
 mod commands;
+mod helpers;
 
 use log::{error, info, LevelFilter};
 use simple_logger::SimpleLogger;
 use std::env;
+use tokio::sync::RwLock;
 
-use commands::{movie, ping, steam, user};
+use commands::{code, movie, ping, steam, user};
+use helpers::{get_versions, Runtimes};
 
 // Types used by all command functions
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
-pub struct Data;
+pub struct Data {
+    runtimes: RwLock<Runtimes>,
+}
 
 #[tokio::main]
 async fn main() {
@@ -35,7 +40,13 @@ async fn main() {
     if let Err(why) = poise::Framework::build()
         .prefix("&")
         .token(token)
-        .user_data_setup(move |_ctx, _ready, _framework| Box::pin(async move { Ok(Data) }))
+        .user_data_setup(move |_ctx, _ready, _framework| Box::pin(async move {
+            Ok(
+                Data {
+                    runtimes: RwLock::new(Vec::new())
+                }
+            )
+        }))
         .options(poise::FrameworkOptions {
             prefix_options: poise::PrefixFrameworkOptions {
                 case_insensitive_commands: true,
@@ -44,9 +55,35 @@ async fn main() {
                 )),
                 ..Default::default()
             },
-            listener: |_ctx, event, _callback, _| {
+            listener: |_ctx, event, _callback, data| {
                 Box::pin(async move {
                     if event.name() == "Ready" {
+                        info!("Starting the bot...");
+                        info!("Getting runtime data from Piston...");
+
+                        // Try fetching data from piston 3 times and fail bot startup if unsuccessful
+                        let mut retries = 1;
+                        while retries <= 3 {
+                            if let Ok(response) = get_versions().await {
+                                let mut runtimes = data.runtimes.write().await;
+                                for runtime in response {
+                                    runtimes.push(runtime);
+                                }
+
+                                info!("Successfully fetched the runtimes from the Piston API.");
+                                break;
+                            } else {
+                                error!("Error getting runtime data. Trying again [{}/3]", retries);
+                                retries += 1;
+                            }
+                        }
+
+                        // If language runtimes weren't fetched from Piston after 3 retries, panic.
+                        if retries == 4 {
+                            error!("Failed to fetch runtimes from the Piston API after 3 retries. Exiting.");
+                            std::process::exit(1);
+                        }
+
                         info!("Bot is up and running.");
                     }
 
@@ -60,6 +97,7 @@ async fn main() {
         .command(ping(), |f| f)
         .command(movie(), |f| f)
         .command(steam(), |f| f.subcommand(user(), |s| s))
+        .command(code(), |f| f)
         .run()
         .await
     {
@@ -81,10 +119,10 @@ async fn help(
     if let Err(why) = poise::samples::help(
         ctx,
         command.as_deref(),
-        "WIP multipurpose bot built in Rustlang. Supports both prefix and slash commands. ex: /ping or &ping",
+        "WIP multipurpose bot built in Rustlang. Supports both prefix and slash commands. ex: /ping or &ping. The code execution command currently only works with prefix commands (&code)",
         poise::samples::HelpResponseMode::Ephemeral,
     )
-    .await
+        .await
     {
         error!("Could not respond to the help command: {}", why);
     }
@@ -111,5 +149,5 @@ enum Commands {
     #[name = "movie"]
     Movie,
     #[name = "steam"]
-    Steam
+    Steam,
 }

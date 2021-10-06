@@ -10,7 +10,7 @@ use std::env;
 /// Usage:
 /// **Prefix:** `&movie <movie_name>`
 /// **Slash command:** `/movie <movie_name>`
-#[poise::command(prefix_command, slash_command, track_edits)]
+#[poise::command(prefix_command, slash_command, track_edits, defer_response)]
 pub async fn movie(
     ctx: Context<'_>,
     #[description = "The name of the movie you want to search"]
