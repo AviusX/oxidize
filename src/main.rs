@@ -6,7 +6,7 @@ use simple_logger::SimpleLogger;
 use std::env;
 use tokio::sync::RwLock;
 
-use commands::{code, movie, ping, steam, user};
+use commands::{code, movie, ping, steam, user, clear};
 use helpers::{get_versions, Runtimes};
 
 // Types used by all command functions
@@ -25,7 +25,7 @@ async fn main() {
     // Initialize the logger
     SimpleLogger::new()
         .with_level(LevelFilter::Warn)
-        .with_module_level("learn_bot", LevelFilter::Debug)
+        .with_module_level("oxidize", LevelFilter::Debug)
         .init()
         .unwrap_or_else(|err| {
             eprintln!(
@@ -98,6 +98,7 @@ async fn main() {
         .command(movie(), |f| f)
         .command(steam(), |f| f.subcommand(user(), |s| s))
         .command(code(), |f| f)
+        .command(clear(), |f| f)
         .run()
         .await
     {

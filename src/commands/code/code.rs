@@ -23,7 +23,7 @@ const PISTON_API: &str = "https://emkc.org/api/v2/piston/execute";
 /// \`\`\`py
 /// print("Hello world!")
 /// \`\`\`
-#[poise::command(prefix_command, broadcast_typing, track_edits)]
+#[poise::command(prefix_command, broadcast_typing, track_edits, aliases("run"))]
 pub async fn code(
     ctx: Context<'_>,
     // #[description = "The programming language to run"] language: Option<Languages>,
@@ -88,22 +88,40 @@ pub async fn code(
         return Ok(());
     } else {
         // otherwise, send either the code error or output to the user.
-        let stderr = &response.run.as_ref().unwrap().stderr;
-        let output = &response.run.as_ref().unwrap().output;
+        let mut compilation_error = None;
+        let run_stderr = &response.run.as_ref().unwrap().stderr;
+        let run_stdout = &response.run.as_ref().unwrap().stdout;
 
-        if stderr != "" {
-            let error_content = format!(
-                "Your code resulted in an error:\n```{}```",
-                stderr
-            );
-            poise::say_reply(ctx, error_content).await?;
-        } else {
-            let content = format!(
-                "Your output is:\n```{}```",
-                output
-            );
-            poise::say_reply(ctx, content).await?;
+        // if there's a compilation error, check that
+        if response.compile.is_some() && !response.compile.as_ref().unwrap().stderr.is_empty() {
+            compilation_error = Some(&response.compile.as_ref().unwrap().stderr);
         }
+
+        if compilation_error.is_none() && run_stderr.is_empty() && run_stdout.is_empty() {
+            poise::say_reply(ctx, "Your code executed successfully without output.").await?;
+            return Ok(());
+        }
+
+        let result = format!(
+            "```{}{}{}```",
+            compilation_error.unwrap_or(&"".to_string()),
+            run_stderr,
+            run_stdout
+        );
+        poise::say_reply(ctx, result).await?;
+        // if !run_stderr.is_empty() {
+        //     let error_content = format!(
+        //         "Your code resulted in an error:\n```{}```",
+        //         run_stderr
+        //     );
+        //     poise::say_reply(ctx, error_content).await?;
+        // } else {
+        //     let content = format!(
+        //         "Your output is:\n```{} ```",
+        //         run_stdout
+        //     );
+        //     poise::say_reply(ctx, content).await?;
+        // }
     }
 
     Ok(())
@@ -124,11 +142,13 @@ struct File {
 #[derive(Deserialize, Debug)]
 struct Response {
     run: Option<RunResult>,
+    compile: Option<RunResult>,
     message: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
 struct RunResult {
     stderr: String,
+    stdout: String,
     output: String,
 }
