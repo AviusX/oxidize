@@ -6,7 +6,7 @@ use simple_logger::SimpleLogger;
 use std::env;
 use tokio::sync::RwLock;
 
-use commands::{code, movie, ping, steam, user, clear};
+use commands::{code, movie, ping, steam, user, clear, google};
 use helpers::{get_versions, Runtimes};
 
 // Types used by all command functions
@@ -99,6 +99,7 @@ async fn main() {
         .command(steam(), |f| f.subcommand(user(), |s| s))
         .command(code(), |f| f)
         .command(clear(), |f| f)
+        .command(google(), |f| f)
         .run()
         .await
     {

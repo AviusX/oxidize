@@ -775,6 +775,7 @@ dependencies = [
  "dotenv",
  "log",
  "poise",
+ "rand",
  "reqwest",
  "serde",
  "simple_logger",
