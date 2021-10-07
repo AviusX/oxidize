@@ -39,12 +39,13 @@ pub async fn google(
         .expect("Expected environment variable SEARCH_ENGINE_ID");
 
     let search_url = format!(
-        "{}?key={}&cx={}&num={}&q={}",
+        "{}?key={}&cx={}&num={}&q={}&safe={}",
         CUSTOM_SEARCH_URL,
         api_key,
         search_engine_id,
         5, // the number of results to get
-        query // the query to search for
+        query, // the query to search for
+        "active" // set safe search to active (omit nsfw results)
     );
 
     let search_result = reqwest::get(&search_url)
