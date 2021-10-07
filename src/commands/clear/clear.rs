@@ -1,4 +1,5 @@
 use crate::{Context, Error};
+use tokio::time::{Duration, sleep};
 
 /// Delete messages in bulk.
 ///
@@ -41,12 +42,15 @@ pub async fn clear(
     {
         poise::say_reply(ctx, format!("There was an error: {}", err)).await?;
     } else {
-        poise::say_reply(
+        let reply = poise::say_reply(
             ctx,
             format!("Successfully deleted the last {} messages.", number),
         )
         .await?;
-        // reply.message().await?.delete(&ctx.discord().cache).await?;
+
+        // Wait 3 seconds and delete the notification message
+        sleep(Duration::from_secs(3)).await;
+        reply.message().await?.delete(&ctx.discord().http).await?;
     }
 
     Ok(())
